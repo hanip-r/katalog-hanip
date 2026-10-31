@@ -1,6 +1,6 @@
 "use client";
 
-export default function FilterKatalog({ kategori, query = "", filterKategori = "", urutan = "terbaru" }) {
+export default function FilterKatalog({ kategori, query = "", filterKategori = "", urutan = "unggulan" }) {
   return (
     <form action="/" method="get" className="grid gap-3 rounded-xl border border-garis bg-permukaan p-3 sm:grid-cols-[1fr_180px_180px_auto]">
       <label className="sr-only" htmlFor="cari-produk">Cari nama produk</label>
@@ -12,6 +12,7 @@ export default function FilterKatalog({ kategori, query = "", filterKategori = "
       </select>
       <label className="sr-only" htmlFor="urutan">Urutkan produk</label>
       <select id="urutan" name="urutan" defaultValue={urutan} className="rounded-lg border border-garis bg-latar px-3 py-2 text-sm">
+        <option value="unggulan">Urutan pilihan toko</option>
         <option value="terbaru">Terbaru</option>
         <option value="termurah">Termurah</option>
         <option value="termahal">Termahal</option>

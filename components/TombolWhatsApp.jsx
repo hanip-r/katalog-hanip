@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { toko } from "@/lib/toko";
 import { formatRupiah } from "@/lib/format";
+import { useStore } from "@/components/AppState";
 
-export default function TombolWhatsApp({ produk }) {
+export default function TombolWhatsApp({ produk, variants = [] }) {
+  const { toko } = useStore();
   const [jumlah, setJumlah] = useState(1);
-  const harga = Number(produk.harga_diskon || produk.harga);
-  const pesan = `Halo, saya ingin memesan ${produk.nama} sebanyak ${jumlah} buah. Harga satuan ${formatRupiah(harga)}, total ${formatRupiah(harga * jumlah)}.`;
+  const [varianId, setVarianId] = useState(variants[0] ? String(variants[0].id) : "");
+  const varian = variants.find((item) => String(item.id) === varianId);
+  const harga = Number(varian?.harga || produk.harga_diskon || produk.harga);
+  const infoVarian = varian ? ` dengan varian ${varian.nama}` : "";
+  const pesan = `Halo, saya ingin memesan ${produk.nama}${infoVarian} sebanyak ${jumlah} buah. Harga satuan ${formatRupiah(harga)}, total ${formatRupiah(harga * jumlah)}.`;
   const url = `https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(pesan)}`;
   function catatKlik() {
     fetch("/api/klik-pesan", {
@@ -20,6 +24,8 @@ export default function TombolWhatsApp({ produk }) {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      {variants.length > 0 && <label className="flex flex-col gap-1 text-sm font-semibold">Pilih varian<select value={varianId} onChange={(event) => setVarianId(event.target.value)} className="rounded-lg border border-garis bg-latar px-3 py-2.5 text-base">{variants.map((item) => <option key={item.id} value={item.id}>{item.nama} — {formatRupiah(item.harga)}</option>)}</select></label>}
+      {variants.length > 0 && <p className="text-sm font-bold text-harga">Harga pilihan: {formatRupiah(harga)}</p>}
       <label className="flex flex-col gap-1 text-sm font-semibold">
         Jumlah
         <input aria-label="Jumlah produk" type="number" min="1" max="99" step="1" value={jumlah} onChange={(event) => setJumlah(Math.min(99, Math.max(1, Number(event.target.value) || 1)))} className="w-24 rounded-lg border border-garis bg-latar px-3 py-2.5 text-base" />

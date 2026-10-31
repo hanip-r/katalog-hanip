@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { toko } from "@/lib/toko";
+import { getTokoSettings } from "@/lib/toko-server";
 
-export const metadata = { title: `Tentang ${toko.nama}`, description: `Profil, alamat, jam buka, dan kontak ${toko.nama}.` };
+export async function generateMetadata() {
+  const toko = await getTokoSettings();
+  return { title: `Tentang ${toko.nama}`, description: `Profil, alamat, jam buka, dan kontak ${toko.nama}.` };
+}
 
-export default function HalamanTentang() {
+export default async function HalamanTentang() {
+  const toko = await getTokoSettings();
   return <article className="flex max-w-2xl flex-col gap-5 py-10">
     <h1 className="text-3xl font-extrabold">Tentang {toko.nama}</h1>
     <p className="text-lg leading-relaxed text-teks-lembut">{toko.tagline}</p>

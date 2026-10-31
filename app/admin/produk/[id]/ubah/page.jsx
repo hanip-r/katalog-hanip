@@ -3,6 +3,7 @@ import NavAdmin from "@/components/NavAdmin";
 import FormProduk from "@/components/FormProduk";
 import { ubahProduk } from "@/app/admin/actions";
 import { createSessionClient } from "@/lib/supabase/server";
+import FormVarian from "@/components/FormVarian";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +20,14 @@ export default async function HalamanUbahProduk({ params }) {
     .maybeSingle();
   if (error || !produk) notFound();
   const { data: categories } = await supabase.from("kategori_produk").select("nama").order("nama");
+  const { data: variants } = await supabase.from("varian_produk").select("id,nama,harga").eq("produk_id", id).order("created_at");
 
   return (
     <div className="flex flex-col gap-6 py-8">
       <NavAdmin />
       <h1 className="text-2xl font-extrabold">Ubah produk</h1>
       <FormProduk produk={produk} action={ubahProduk.bind(null, id)} labelTombol="Simpan perubahan" categories={(categories || []).map((item) => item.nama)} />
+      <FormVarian produkId={id} variants={variants || []} />
     </div>
   );
 }

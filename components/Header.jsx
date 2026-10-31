@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { toko } from "@/lib/toko";
 import { useStore } from "@/components/AppState";
 
 export default function Header() {
-  const { cartItems, favorites, compare, theme, toggleTheme } = useStore();
+  const { cartItems, favorites, compare, theme, toggleTheme, toko } = useStore();
   const jumlahKeranjang = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (

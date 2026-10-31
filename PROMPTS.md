@@ -69,3 +69,11 @@ Tambahkan bagian baru untuk setiap error yang kamu perbaiki atau fitur bonus yan
 **Hasil:** Ditambahkan keranjang persisten dan pesan banyak produk, halaman tentang, bagikan produk, favorit, tema gelap, Open Graph, sitemap/robots, loading, upload Supabase Storage, dashboard ringkasan, CRUD kategori, toggle produk, pencarian dan paginasi admin, validasi per field, ekspor CSV, terakhir dilihat, perbandingan produk, ulasan dengan moderasi, serta pencatatan klik WhatsApp.
 
 **Perbaikan:** Fitur membutuhkan migrasi `docs/migrasi-us-21-40.sql` untuk tabel kategori, ulasan, klik pesan dan bucket Storage. Upload memakai bucket publik `foto-produk`; tulis file hanya dilakukan Server Action setelah pemeriksaan admin.
+
+### US-41 sampai US-50
+
+**Prompt:** Implementasikan story bonus US-41 sampai US-50 dan push.
+
+**Hasil:** Dashboard merangkum produk terlaris dari klik WhatsApp; admin dapat mengelola banner, pengaturan toko, akun admin, log aktivitas, impor CSV, urutan produk, dan varian harga. Pengunjung mendapat halaman kategori khusus serta asisten tanya jawab produk dengan batas panjang dan pembatasan permintaan di server.
+
+**Perbaikan:** Jalankan `docs/migrasi-us-41-50.sql` untuk kolom urutan serta tabel banner, pengaturan, log, varian, dan pembatasan AI. Pengelolaan akun memakai Supabase Auth Admin API di server; `GEMINI_API_KEY` tetap rahasia di environment server.

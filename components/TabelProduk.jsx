@@ -2,6 +2,7 @@ import { formatRupiah } from "@/lib/format";
 import Tombol from "@/components/Tombol";
 import TombolHapusProduk from "@/components/TombolHapusProduk";
 import TombolKetersediaan from "@/components/TombolKetersediaan";
+import AksiUrutanProduk from "@/components/AksiUrutanProduk";
 
 export default function TabelProduk({ daftarProduk }) {
   if (daftarProduk.length === 0) {
@@ -18,6 +19,7 @@ export default function TabelProduk({ daftarProduk }) {
             <th className="px-4 py-3 font-semibold">Harga</th>
             <th className="px-4 py-3 font-semibold">Stok</th>
             <th className="px-4 py-3 font-semibold">Tampil</th>
+            <th className="px-4 py-3 font-semibold">Urutan</th>
             <th className="px-4 py-3 font-semibold"><span className="sr-only">Aksi</span></th>
           </tr>
         </thead>
@@ -39,6 +41,7 @@ export default function TabelProduk({ daftarProduk }) {
               </td>
               <td className="px-4 py-3">{produk.tersedia ? "Tersedia" : "Habis"}</td>
               <td className="px-4 py-3"><TombolKetersediaan id={produk.id} tersedia={Boolean(produk.tersedia)} /></td>
+              <td className="px-4 py-3"><AksiUrutanProduk id={produk.id} /></td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
                   <Tombol href={`/admin/produk/${produk.id}/ubah`} varian="garis">Ubah</Tombol>

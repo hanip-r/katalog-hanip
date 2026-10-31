@@ -16,7 +16,7 @@ const productSnapshot = (product) => ({
   badge: product.badge || null,
 });
 
-export function AppState({ children }) {
+export function AppState({ children, toko }) {
   const [cartItems, setCartItems] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -47,7 +47,7 @@ export function AppState({ children }) {
   }, [cartItems, favorites, recent, compare, theme, ready]);
 
   const value = useMemo(() => ({
-    cartItems, favorites, recent, compare, theme, ready,
+    cartItems, favorites, recent, compare, theme, ready, toko,
     addToCart(product, quantity = 1) {
       const snapshot = productSnapshot(product);
       setCartItems((items) => {
@@ -80,7 +80,7 @@ export function AppState({ children }) {
     },
     removeCompare(id) { setCompare((items) => items.filter((item) => String(item.id) !== String(id))); },
     toggleTheme() { setTheme((current) => current === "dark" ? "light" : "dark"); },
-  }), [cartItems, favorites, recent, compare, theme, ready]);
+  }), [cartItems, favorites, recent, compare, theme, ready, toko]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

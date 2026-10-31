@@ -43,7 +43,11 @@ create table if not exists public.klik_pesan (
   created_at timestamptz not null default now()
 );
 alter table public.klik_pesan enable row level security;
+drop policy if exists "admin_baca_klik_pesan" on public.klik_pesan;
+create policy "admin_baca_klik_pesan" on public.klik_pesan
+  for select to authenticated using (true);
 grant insert on public.klik_pesan to service_role;
+grant select on public.klik_pesan to authenticated;
 grant usage, select on sequence public.klik_pesan_id_seq to service_role;
 create index if not exists klik_pesan_produk_waktu_idx on public.klik_pesan (produk_id, created_at desc);
 

@@ -10,6 +10,8 @@ import BagikanProduk from "@/components/BagikanProduk";
 import CatatProdukDibuka from "@/components/CatatProdukDibuka";
 import FormUlasan from "@/components/FormUlasan";
 import { getBaseUrl } from "@/lib/base-url";
+import { slugKategori } from "@/lib/kategori";
+import AsistenProduk from "@/components/AsistenProduk";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,7 @@ export default async function HalamanDetailProduk({ params }) {
   let produk = null;
   let terkait = [];
   let ulasan = [];
+  let variants = [];
 
   try {
     const supabase = createServerClient();
@@ -65,6 +68,8 @@ export default async function HalamanDetailProduk({ params }) {
     }
     if (!error && data) {
       produk = data;
+      const { data: daftarVarian, error: variantError } = await supabase.from("varian_produk").select("id,nama,harga").eq("produk_id", produk.id).order("created_at");
+      if (!variantError) variants = daftarVarian || [];
       const { data: daftarUlasan, error: reviewError } = await supabase
         .from("ulasan")
         .select("id,nama,rating,komentar,created_at")
@@ -107,7 +112,7 @@ export default async function HalamanDetailProduk({ params }) {
         <GaleriProduk produk={produk} />
         <div className="flex flex-col items-start gap-4">
           <Link href="/" className="text-sm text-teks-lembut underline underline-offset-4 hover:text-utama">Kembali ke katalog</Link>
-          {produk.kategori && <Link href={`/?kategori=${encodeURIComponent(produk.kategori)}`} className="text-sm text-teks-lembut hover:text-utama">{produk.kategori}</Link>}
+          {produk.kategori && <Link href={`/kategori/${slugKategori(produk.kategori)}`} className="text-sm text-teks-lembut hover:text-utama">{produk.kategori}</Link>}
           <h1 className="text-3xl font-extrabold leading-tight tracking-tight">{produk.nama}</h1>
           {produk.badge && <span className="rounded-full bg-utama px-3 py-1 text-xs font-bold text-white">{produk.badge}</span>}
           <div className="rounded-md bg-harga-latar px-3 py-2 text-xl font-bold text-harga">
@@ -116,7 +121,7 @@ export default async function HalamanDetailProduk({ params }) {
           <p className="max-w-prose whitespace-pre-line leading-relaxed text-teks-lembut">{produk.deskripsi}</p>
           <AksiProduk produk={produk} />
           <BagikanProduk nama={produk.nama} />
-          <TombolWhatsApp produk={produk} />
+          <TombolWhatsApp produk={produk} variants={variants} />
         </div>
       </article>
 
@@ -128,6 +133,8 @@ export default async function HalamanDetailProduk({ params }) {
         </> : <p className="text-sm text-teks-lembut">Belum ada ulasan yang ditampilkan.</p>}
         <FormUlasan produkId={produk.id} />
       </section>
+
+      <section className="pb-8"><AsistenProduk produkId={produk.id} /></section>
 
       {terkait.length > 0 && (
         <section className="flex flex-col gap-4 pb-12" aria-labelledby="produk-terkait">

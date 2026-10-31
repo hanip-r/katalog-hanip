@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useStore } from "@/components/AppState";
 import { formatRupiah } from "@/lib/format";
-import { toko } from "@/lib/toko";
 
 export default function HalamanKeranjang() {
-  const { cartItems, setQuantity, removeFromCart, clearCart } = useStore();
+  const { cartItems, setQuantity, removeFromCart, clearCart, toko } = useStore();
   const total = cartItems.reduce((sum, item) => sum + Number(item.harga_diskon || item.harga) * item.quantity, 0);
   const pesan = ["Halo, saya ingin memesan:", ...cartItems.map((item) => `- ${item.nama} x${item.quantity} — ${formatRupiah(Number(item.harga_diskon || item.harga) * item.quantity)}`), `Total: ${formatRupiah(total)}`].join("\n");
   const whatsappUrl = `https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(pesan)}`;

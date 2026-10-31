@@ -8,7 +8,7 @@ Template workshop vibe coding Creative Hub App Talent (CHAT) 2026. Repo ini beri
 
 1. **Salin repo ke akun GitHub-mu.** Klik tombol **Deploy with Vercel** di atas. Vercel akan membuat repo baru di akun GitHub-mu dan langsung men-deploy-nya. Setelah selesai, buka link Vercel-mu: katalog tampil dengan data contoh.
 2. **Buat proyek Supabase.** Masuk ke [supabase.com](https://supabase.com) dengan akun GitHub, lalu buat proyek baru. Simpan password database di tempat aman.
-3. **Siapkan database.** Di Supabase, buka **SQL Editor**, jalankan seluruh isi `docs/schema.sql`, lalu jalankan `docs/migrasi-us-07-20.sql` dan `docs/migrasi-us-21-40.sql`. Kedua migrasi bonus aman dijalankan ulang; keduanya menyiapkan kolom produk, tabel kategori/ulasan/klik pesan, dan bucket foto.
+3. **Siapkan database.** Di Supabase, buka **SQL Editor**, jalankan seluruh isi `docs/schema.sql`, lalu jalankan `docs/migrasi-us-07-20.sql`, `docs/migrasi-us-21-40.sql`, dan `docs/migrasi-us-41-50.sql`. Migrasi bonus aman dijalankan ulang; migrasi ini menyiapkan semua kolom, tabel, kebijakan akses, dan bucket foto yang dibutuhkan aplikasi.
 4. **Siapkan akun admin.** Ikuti panduan akun admin yang dibagikan mentor. Setelah itu matikan pendaftaran akun baru di **Authentication > Sign In / Providers**.
 5. **Isi environment variable di Vercel.** Buka proyekmu di Vercel > **Settings > Environment Variables**, lalu isi variabel Supabase dari `.env.example`. Untuk fitur deskripsi AI, tambahkan `GEMINI_API_KEY` dari Google AI Studio. Semua variabel harus tersedia di server, tanpa awalan `NEXT_PUBLIC_`. Setelah itu lakukan **Redeploy**.
 6. **Clone repo ke laptop.**
