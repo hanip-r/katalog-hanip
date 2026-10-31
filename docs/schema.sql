@@ -13,6 +13,25 @@ create table if not exists public.produk (
   created_at timestamptz not null default now()
 );
 
+-- Kolom bonus US-18 sampai US-20; aman dijalankan pada tabel yang sudah ada.
+alter table public.produk add column if not exists tersedia boolean not null default true;
+alter table public.produk add column if not exists foto_galeri text[] not null default '{}';
+alter table public.produk add column if not exists harga_diskon integer;
+alter table public.produk add column if not exists badge text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produk_harga_diskon_valid'
+      and conrelid = 'public.produk'::regclass
+  ) then
+    alter table public.produk
+      add constraint produk_harga_diskon_valid
+      check (harga_diskon is null or (harga_diskon > 0 and harga_diskon < harga));
+  end if;
+end $$;
+
 -- 2. Row Level Security
 -- Tidak ada izin untuk publik: akses langsung ke tabel dari luar aplikasi ditolak.
 -- Hanya admin yang sudah login yang boleh membaca dan mengubah data.
