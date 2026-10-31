@@ -2,6 +2,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ServiceWorker from "@/app/ServiceWorker";
+import { AppState } from "@/components/AppState";
 import { toko } from "@/lib/toko";
 
 export const metadata = {
@@ -31,9 +32,11 @@ export default function RootLayout({ children }) {
       </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <ServiceWorker />
-        <Header />
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4">{children}</main>
-        <Footer />
+        <AppState>
+          <Header />
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4">{children}</main>
+          <Footer />
+        </AppState>
       </body>
     </html>
   );

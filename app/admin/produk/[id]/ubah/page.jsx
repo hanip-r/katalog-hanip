@@ -18,12 +18,13 @@ export default async function HalamanUbahProduk({ params }) {
     .eq("id", id)
     .maybeSingle();
   if (error || !produk) notFound();
+  const { data: categories } = await supabase.from("kategori_produk").select("nama").order("nama");
 
   return (
     <div className="flex flex-col gap-6 py-8">
       <NavAdmin />
       <h1 className="text-2xl font-extrabold">Ubah produk</h1>
-      <FormProduk produk={produk} action={ubahProduk.bind(null, id)} labelTombol="Simpan perubahan" />
+      <FormProduk produk={produk} action={ubahProduk.bind(null, id)} labelTombol="Simpan perubahan" categories={(categories || []).map((item) => item.nama)} />
     </div>
   );
 }

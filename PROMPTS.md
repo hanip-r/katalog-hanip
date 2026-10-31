@@ -61,3 +61,11 @@ Tambahkan bagian baru untuk setiap error yang kamu perbaiki atau fitur bonus yan
 **Hasil:** Daftar produk admin kini membaca Supabase; tambah, ubah, dan hapus produk memakai Server Action yang memeriksa sesi admin. Katalog mendukung pencarian, filter kategori, urutan database, dan paginasi. Detail produk menampilkan foto tambahan, produk terkait, harga promo, badge, pilihan jumlah, dan menyembunyikan produk yang tidak tersedia. Manifest, ikon, dan service worker PWA ditambahkan. Form admin dapat meminta deskripsi dari Gemini melalui server.
 
 **Perbaikan:** Ditambahkan migrasi kolom `tersedia`, `foto_galeri`, `harga_diskon`, dan `badge` untuk proyek Supabase yang tabelnya sudah ada. Tambahkan `GEMINI_API_KEY` di environment server Vercel agar fitur AI aktif. Katalog dan detail tetap kompatibel sementara dengan skema lama sampai migrasi dijalankan.
+
+### US-21 sampai US-40
+
+**Prompt:** Lengkapi story bonus US-21 sampai US-40 dan push implementasinya.
+
+**Hasil:** Ditambahkan keranjang persisten dan pesan banyak produk, halaman tentang, bagikan produk, favorit, tema gelap, Open Graph, sitemap/robots, loading, upload Supabase Storage, dashboard ringkasan, CRUD kategori, toggle produk, pencarian dan paginasi admin, validasi per field, ekspor CSV, terakhir dilihat, perbandingan produk, ulasan dengan moderasi, serta pencatatan klik WhatsApp.
+
+**Perbaikan:** Fitur membutuhkan migrasi `docs/migrasi-us-21-40.sql` untuk tabel kategori, ulasan, klik pesan dan bucket Storage. Upload memakai bucket publik `foto-produk`; tulis file hanya dilakukan Server Action setelah pemeriksaan admin.

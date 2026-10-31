@@ -1,6 +1,6 @@
 "use server";
 
-import { createSessionClient } from "@/lib/supabase/server";
+import { createSessionClient, createServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -34,18 +34,19 @@ function productValues(formData) {
     badge: String(formData.get("badge") || "").trim() || null,
   };
 
-  if (!nama) return { error: "Nama produk wajib diisi." };
-  if (!Number.isSafeInteger(harga) || harga <= 0) {
-    return { error: "Harga harus berupa angka bulat lebih dari 0." };
-  }
+  const errors = {};
+  if (!nama) errors.nama = "Nama produk wajib diisi.";
+  else if (nama.length > 120) errors.nama = "Nama produk maksimal 120 karakter.";
+  if (!Number.isSafeInteger(harga) || harga <= 0) errors.harga = "Harga harus berupa angka bulat lebih dari 0.";
+  if (values.deskripsi.length > 1200) errors.deskripsi = "Deskripsi maksimal 1200 karakter.";
   if (harga_diskon !== null && (!Number.isSafeInteger(harga_diskon) || harga_diskon <= 0 || harga_diskon >= harga)) {
-    return { error: "Harga promo harus lebih dari 0 dan lebih rendah dari harga normal." };
+    errors.harga_diskon = "Harga promo harus lebih dari 0 dan lebih rendah dari harga normal.";
   }
-  return { values };
+  return Object.keys(errors).length ? { errors } : { values };
 }
 
 function formValues(formData) {
-  return Object.fromEntries(formData.entries());
+  return Object.fromEntries([...formData.entries()].filter(([, value]) => !(value instanceof File)));
 }
 
 export async function login(prevState, formData) {
@@ -112,7 +113,7 @@ export async function gantiPassword(prevState, formData) {
 export async function tambahProduk(prevState, formData) {
   const supabase = await requireAdmin();
   const parsed = productValues(formData);
-  if (parsed.error) return { error: parsed.error, values: formValues(formData) };
+  if (parsed.errors) return { errors: parsed.errors, values: formValues(formData) };
 
   const { error } = await supabase.from("produk").insert(parsed.values);
   if (error) return { error: "Produk gagal disimpan. Pastikan migrasi database sudah dijalankan.", values: formValues(formData) };
@@ -125,7 +126,7 @@ export async function tambahProduk(prevState, formData) {
 export async function ubahProduk(id, prevState, formData) {
   const supabase = await requireAdmin();
   const parsed = productValues(formData);
-  if (parsed.error) return { error: parsed.error, values: formValues(formData) };
+  if (parsed.errors) return { errors: parsed.errors, values: formValues(formData) };
 
   const { error } = await supabase.from("produk").update(parsed.values).eq("id", id);
   if (error) return { error: "Perubahan gagal disimpan. Pastikan migrasi database sudah dijalankan.", values: formValues(formData) };
@@ -178,5 +179,114 @@ export async function buatDeskripsiAI(prevState, formData) {
     return { description };
   } catch {
     return { error: "Koneksi ke layanan AI gagal atau terlalu lama. Coba lagi." };
+  }
+}
+
+export async function toggleKetersediaan(id) {
+  const supabase = await requireAdmin();
+  const { data: produk, error: selectError } = await supabase
+    .from("produk").select("tersedia").eq("id", id).maybeSingle();
+  if (selectError || !produk) return { error: "Status produk tidak dapat diperbarui. Jalankan migrasi database." };
+  const { error } = await supabase.from("produk").update({ tersedia: !produk.tersedia }).eq("id", id);
+  if (error) return { error: "Status produk gagal diperbarui." };
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath(`/produk/${id}`);
+  return { success: produk.tersedia ? "Produk dinonaktifkan." : "Produk diaktifkan." };
+}
+
+export async function tambahKategori(prevState, formData) {
+  const supabase = await requireAdmin();
+  const nama = String(formData.get("nama") || "").trim();
+  if (!nama || nama.length > 80) return { error: "Nama kategori wajib diisi dan maksimal 80 karakter." };
+  const { error } = await supabase.from("kategori_produk").insert({ nama });
+  if (error) return { error: "Kategori gagal ditambahkan. Pastikan namanya belum ada dan migrasi sudah dijalankan." };
+  revalidatePath("/admin/kategori");
+  revalidatePath("/admin/produk/baru");
+  redirect("/admin/kategori");
+}
+
+export async function ubahKategori(namaLama, prevState, formData) {
+  const supabase = await requireAdmin();
+  const nama = String(formData.get("nama") || "").trim();
+  if (!nama || nama.length > 80) return { error: "Nama kategori wajib diisi dan maksimal 80 karakter." };
+  const { error: renameError } = await supabase.from("kategori_produk").update({ nama }).eq("nama", namaLama);
+  if (renameError) return { error: "Kategori gagal diubah. Nama mungkin sudah digunakan." };
+  const { error: productError } = await supabase.from("produk").update({ kategori: nama }).eq("kategori", namaLama);
+  if (productError) return { error: "Nama kategori diperbarui, tetapi kategori produk lama gagal diperbarui." };
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/kategori");
+  redirect("/admin/kategori");
+}
+
+export async function hapusKategori(nama) {
+  const supabase = await requireAdmin();
+  const { data: produk, error: productError } = await supabase.from("produk").select("id").eq("kategori", nama).limit(1);
+  if (productError) return { error: "Tidak dapat memeriksa penggunaan kategori." };
+  if (produk?.length) return { error: "Kategori masih dipakai produk. Ubah kategori produk terlebih dahulu." };
+  const { error } = await supabase.from("kategori_produk").delete().eq("nama", nama);
+  if (error) return { error: "Kategori gagal dihapus." };
+  revalidatePath("/admin/kategori");
+  revalidatePath("/admin/produk/baru");
+  return { success: "Kategori dihapus." };
+}
+
+export async function uploadFotoProduk(prevState, formData) {
+  await requireAdmin();
+  const file = formData.get("foto_file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Pilih file gambar terlebih dahulu." };
+  const formats = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+  if (!formats[file.type]) return { error: "Format gambar harus JPG, PNG, WebP, atau GIF." };
+  if (file.size > 5 * 1024 * 1024) return { error: "Ukuran foto maksimal 5 MB." };
+
+  try {
+    const storageClient = createServerClient();
+    const namaFile = `${crypto.randomUUID()}.${formats[file.type]}`;
+    const { error } = await storageClient.storage.from("foto-produk").upload(namaFile, file, { contentType: file.type, upsert: false });
+    if (error) return { error: "Foto gagal diunggah. Pastikan bucket foto-produk sudah dibuat." };
+    const { data } = storageClient.storage.from("foto-produk").getPublicUrl(namaFile);
+    return { url: data.publicUrl };
+  } catch {
+    return { error: "Foto gagal diunggah. Periksa konfigurasi Supabase." };
+  }
+}
+
+export async function moderasiUlasan(id, tampil) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("ulasan").update({ tampil }).eq("id", id);
+  if (error) return { error: "Status ulasan gagal diubah." };
+  revalidatePath("/admin/ulasan");
+  revalidatePath("/");
+  return { success: "Status ulasan diperbarui." };
+}
+
+export async function hapusUlasan(id) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("ulasan").delete().eq("id", id);
+  if (error) return { error: "Ulasan gagal dihapus." };
+  revalidatePath("/admin/ulasan");
+  revalidatePath("/");
+  return { success: "Ulasan dihapus." };
+}
+
+export async function kirimUlasan(prevState, formData) {
+  if (String(formData.get("website") || "").trim()) return { success: "Terima kasih. Ulasan akan diperiksa sebelum ditampilkan." };
+  const produkId = Number(formData.get("produk_id"));
+  const nama = String(formData.get("nama") || "").trim();
+  const komentar = String(formData.get("komentar") || "").trim();
+  const rating = Number(formData.get("rating"));
+  if (!Number.isSafeInteger(produkId) || produkId <= 0) return { error: "Produk tidak valid." };
+  if (nama.length < 1 || nama.length > 80) return { error: "Nama wajib diisi (maksimal 80 karakter)." };
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return { error: "Pilih rating 1 sampai 5." };
+  if (komentar.length < 3 || komentar.length > 1000) return { error: "Komentar harus 3 sampai 1000 karakter." };
+  try {
+    const supabase = createServerClient();
+    const { error } = await supabase.from("ulasan").insert({ produk_id: produkId, nama, rating, komentar });
+    if (error) return { error: "Ulasan gagal dikirim. Coba lagi." };
+    revalidatePath(`/produk/${produkId}`);
+    return { success: "Terima kasih. Ulasan akan diperiksa sebelum ditampilkan." };
+  } catch {
+    return { error: "Ulasan gagal dikirim. Coba lagi nanti." };
   }
 }

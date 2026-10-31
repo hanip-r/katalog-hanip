@@ -10,6 +10,12 @@ export default function NavAdmin() {
       <Link href="/admin/password" className="font-semibold hover:text-utama">
         Ganti password
       </Link>
+      <Link href="/admin/kategori" className="font-semibold hover:text-utama">
+        Kategori
+      </Link>
+      <Link href="/admin/ulasan" className="font-semibold hover:text-utama">
+        Ulasan
+      </Link>
       <form action={keluar} className="ml-auto inline-flex items-center">
         <button type="submit" className="text-teks-lembut hover:text-bahaya">
           Keluar

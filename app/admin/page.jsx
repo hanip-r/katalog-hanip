@@ -1,3 +1,4 @@
+import Link from "next/link";
 import NavAdmin from "@/components/NavAdmin";
 import TabelProduk from "@/components/TabelProduk";
 import Tombol from "@/components/Tombol";
@@ -5,31 +6,58 @@ import { createSessionClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+const PAGE_SIZE = 12;
 
-export default async function HalamanAdmin() {
+export default async function HalamanAdmin({ searchParams }) {
+  const params = await searchParams;
+  const q = String(params.q || "").trim().slice(0, 100);
+  const requestedPage = Math.max(1, Number.parseInt(params.page || "1", 10) || 1);
   const supabase = await createSessionClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) redirect("/admin/login");
 
-  const { data: daftarProduk, error } = await supabase
-    .from("produk")
-    .select("*")
-    .order("id", { ascending: true });
+  let filteredCount = supabase.from("produk").select("id", { count: "exact", head: true });
+  if (q) filteredCount = filteredCount.ilike("nama", `%${q}%`);
+  const [countResult, totalResult, categoryResult] = await Promise.all([
+    filteredCount,
+    supabase.from("produk").select("id", { count: "exact", head: true }),
+    supabase.from("produk").select("kategori"),
+  ]);
+  const pages = Math.max(1, Math.ceil((countResult.count || 0) / PAGE_SIZE));
+  const page = Math.min(requestedPage, pages);
+  let listQuery = supabase.from("produk").select("*").order("id", { ascending: true });
+  if (q) listQuery = listQuery.ilike("nama", `%${q}%`);
+  const { data: daftarProduk, error } = await listQuery.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
-  return (
-    <div className="flex flex-col gap-6 py-8">
-      <NavAdmin />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold">Produk</h1>
-        <Tombol href="/admin/produk/baru">Tambah produk</Tombol>
-      </div>
-      {error ? (
-        <p className="rounded-lg border border-garis bg-permukaan p-4 text-sm text-bahaya">
-          Gagal memuat produk. Periksa tabel dan migrasi database.
-        </p>
-      ) : (
-        <TabelProduk daftarProduk={daftarProduk || []} />
-      )}
+  const counts = (categoryResult.data || []).reduce((result, item) => {
+    const key = item.kategori || "Tanpa kategori";
+    result[key] = (result[key] || 0) + 1;
+    return result;
+  }, {});
+  const pageUrl = (value) => `/admin?${new URLSearchParams({ ...(q ? { q } : {}), ...(value > 1 ? { page: String(value) } : {}) }).toString()}`;
+
+  return <div className="flex flex-col gap-6 py-8">
+    <NavAdmin />
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="text-2xl font-extrabold">Dashboard produk</h1>
+      <div className="flex flex-wrap gap-2"><Tombol href="/admin/export" varian="garis">Ekspor CSV</Tombol><Tombol href="/admin/produk/baru">Tambah produk</Tombol></div>
     </div>
-  );
+
+    <section aria-label="Ringkasan katalog" className="grid gap-3 sm:grid-cols-2">
+      <div className="rounded-xl border border-garis bg-permukaan p-4"><p className="text-sm text-teks-lembut">Total produk</p><p className="text-2xl font-extrabold">{totalResult.count ?? 0}</p></div>
+      <div className="rounded-xl border border-garis bg-permukaan p-4"><p className="text-sm font-bold">Produk per kategori</p>{Object.keys(counts).length ? <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-teks-lembut">{Object.entries(counts).map(([nama, jumlah]) => <li key={nama}>{nama}: {jumlah}</li>)}</ul> : <p className="mt-1 text-sm text-teks-lembut">Belum ada produk.</p>}</div>
+    </section>
+
+    <form action="/admin" method="get" className="flex max-w-lg gap-2">
+      <input type="search" name="q" defaultValue={q} placeholder="Cari nama produk…" className="min-w-0 flex-1 rounded-lg border border-garis bg-latar px-3 py-2" />
+      <button className="rounded-lg bg-utama px-4 py-2 font-semibold text-white">Cari</button>
+    </form>
+    {error ? <p role="alert" className="text-sm text-bahaya">Gagal memuat daftar produk.</p> : <TabelProduk daftarProduk={(daftarProduk || []).map((item) => ({ ...item, tersedia: item.tersedia ?? true }))} />}
+
+    {pages > 1 && <nav aria-label="Paginasi produk admin" className="flex items-center justify-between">
+      {page > 1 ? <Link href={pageUrl(page - 1)} className="rounded-lg border border-garis px-4 py-2 text-sm font-semibold">Sebelumnya</Link> : <span />}
+      <span className="text-sm text-teks-lembut">Halaman {page} dari {pages}</span>
+      {page < pages ? <Link href={pageUrl(page + 1)} className="rounded-lg border border-garis px-4 py-2 text-sm font-semibold">Berikutnya</Link> : <span />}
+    </nav>}
+  </div>;
 }

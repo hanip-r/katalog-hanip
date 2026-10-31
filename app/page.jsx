@@ -1,6 +1,7 @@
 import Link from "next/link";
 import KartuProduk from "@/components/KartuProduk";
 import FilterKatalog from "@/components/FilterKatalog";
+import { DaftarTerakhirDilihat } from "@/components/KartuDaftarLocal";
 import { toko } from "@/lib/toko";
 import { createServerClient } from "@/lib/supabase";
 
@@ -97,6 +98,7 @@ export default async function HalamanKatalog({ searchParams }) {
           </nav>
         )}
       </section>
+      <DaftarTerakhirDilihat />
     </>
   );
 }

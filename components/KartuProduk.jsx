@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatRupiah } from "@/lib/format";
+import AksiProduk from "@/components/AksiProduk";
 
 export default function KartuProduk({ produk }) {
   const gambar = produk.foto_url || produk.foto_galeri?.[0] || "/produk/kopi.svg";
@@ -20,6 +21,7 @@ export default function KartuProduk({ produk }) {
         <div className="mt-auto self-start rounded-md bg-harga-latar px-2 py-1 text-sm font-bold text-harga">
           {produk.harga_diskon ? <><span className="mr-2 text-xs font-medium text-teks-lembut line-through">{formatRupiah(produk.harga)}</span>{formatRupiah(produk.harga_diskon)}</> : formatRupiah(produk.harga)}
         </div>
+        <AksiProduk produk={produk} />
       </div>
     </article>
   );
